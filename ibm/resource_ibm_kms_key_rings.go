@@ -112,10 +112,14 @@ func resourceIBMKmsKeyRingCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.HasPrefix(kpAPI.Config.BaseURL, "private") {
-				kpAPI.Config.BaseURL = "private." + kpAPI.Config.BaseURL
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")
@@ -182,10 +186,23 @@ func resourceIBMKmsKeyRingRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.HasPrefix(kpAPI.Config.BaseURL, "private") {
-				kpAPI.Config.BaseURL = "private." + kpAPI.Config.BaseURL
+		rContollerClient, err := meta.(ClientSession).ResourceControllerAPIV2()
+		if err != nil {
+			return err
+		}
+		rContollerApi := rContollerClient.ResourceServiceInstanceV2()
+		instanceData, err := rContollerApi.GetInstance(instanceID)
+		if err != nil {
+			return err
+		}
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")
@@ -245,10 +262,23 @@ func resourceIBMKmsKeyRingDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.HasPrefix(kpAPI.Config.BaseURL, "private") {
-				kpAPI.Config.BaseURL = "private." + kpAPI.Config.BaseURL
+		rContollerClient, err := meta.(ClientSession).ResourceControllerAPIV2()
+		if err != nil {
+			return err
+		}
+		rContollerApi := rContollerClient.ResourceServiceInstanceV2()
+		instanceData, err := rContollerApi.GetInstance(instanceID)
+		if err != nil {
+			return err
+		}
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")

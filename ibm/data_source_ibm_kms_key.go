@@ -201,10 +201,14 @@ func dataSourceIBMKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		api.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.HasPrefix(api.Config.BaseURL, "private") {
-				api.Config.BaseURL = "private." + api.Config.BaseURL
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			api.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")

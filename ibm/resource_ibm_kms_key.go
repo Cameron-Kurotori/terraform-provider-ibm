@@ -295,20 +295,14 @@ func resourceIBMKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.Contains(kpAPI.Config.BaseURL, "private") {
-				kmsEndpURL := strings.SplitAfter(kpAPI.Config.BaseURL, "https://")
-				if len(kmsEndpURL) == 2 {
-					kmsEndpointURL := kmsEndpURL[0] + "private." + kmsEndpURL[1]
-					u, err := url.Parse(kmsEndpointURL)
-					if err != nil {
-						return fmt.Errorf("Error Parsing kms EndpointURL")
-					}
-					kpAPI.URL = u
-				} else {
-					return fmt.Errorf("Error in Kms EndPoint URL ")
-				}
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")
@@ -423,20 +417,23 @@ func resourceIBMKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
 		instanceType = "kms"
-		if endpointType == "private" {
-			if !strings.Contains(kpAPI.Config.BaseURL, "private") {
-				kmsEndpURL := strings.SplitAfter(kpAPI.Config.BaseURL, "https://")
-				if len(kmsEndpURL) == 2 {
-					kmsEndpointURL := kmsEndpURL[0] + "private." + kmsEndpURL[1]
-					u, err := url.Parse(kmsEndpointURL)
-					if err != nil {
-						return fmt.Errorf("Error Parsing kms EndpointURL")
-					}
-					kpAPI.URL = u
-				} else {
-					return fmt.Errorf("Error in Kms EndPoint URL ")
-				}
+		rContollerClient, err := meta.(ClientSession).ResourceControllerAPIV2()
+		if err != nil {
+			return err
+		}
+		rContollerApi := rContollerClient.ResourceServiceInstanceV2()
+		instanceData, err := rContollerApi.GetInstance(instanceID)
+		if err != nil {
+			return err
+		}
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")
@@ -547,20 +544,14 @@ func resourceIBMKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			kpAPI.URL = u
 		} else if crnData[4] == "kms" {
-			if endpointType == "private" {
-				if !strings.Contains(kpAPI.Config.BaseURL, "private") {
-					kmsEndpURL := strings.SplitAfter(kpAPI.Config.BaseURL, "https://")
-					if len(kmsEndpURL) == 2 {
-						kmsEndpointURL := kmsEndpURL[0] + "private." + kmsEndpURL[1]
-						u, err := url.Parse(kmsEndpointURL)
-						if err != nil {
-							return fmt.Errorf("Error Parsing kms EndpointURL")
-						}
-						kpAPI.URL = u
-					} else {
-						return fmt.Errorf("Error in Kms EndPoint URL ")
-					}
+			if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+				u, err := url.Parse(ep + "/api/v2/")
+				if err != nil {
+					return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 				}
+				kpAPI.URL = u
+			} else {
+				return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 			}
 		} else {
 			return fmt.Errorf("Invalid or unsupported service Instance")
@@ -619,20 +610,23 @@ func resourceIBMKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.Contains(kpAPI.Config.BaseURL, "private") {
-				kmsEndpURL := strings.SplitAfter(kpAPI.Config.BaseURL, "https://")
-				if len(kmsEndpURL) == 2 {
-					kmsEndpointURL := kmsEndpURL[0] + "private." + kmsEndpURL[1]
-					u, err := url.Parse(kmsEndpointURL)
-					if err != nil {
-						return fmt.Errorf("Error Parsing kms EndpointURL")
-					}
-					kpAPI.URL = u
-				} else {
-					return fmt.Errorf("Error in Kms EndPoint URL ")
-				}
+		rContollerClient, err := meta.(ClientSession).ResourceControllerAPIV2()
+		if err != nil {
+			return err
+		}
+		rContollerApi := rContollerClient.ResourceServiceInstanceV2()
+		instanceData, err := rContollerApi.GetInstance(instanceID)
+		if err != nil {
+			return err
+		}
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return fmt.Errorf("Invalid or unsupported service Instance")
@@ -692,20 +686,23 @@ func resourceIBMKmsKeyExists(d *schema.ResourceData, meta interface{}) (bool, er
 		}
 		kpAPI.URL = u
 	} else if crnData[4] == "kms" {
-		if endpointType == "private" {
-			if !strings.Contains(kpAPI.Config.BaseURL, "private") {
-				kmsEndpURL := strings.SplitAfter(kpAPI.Config.BaseURL, "https://")
-				if len(kmsEndpURL) == 2 {
-					kmsEndpointURL := kmsEndpURL[0] + "private." + kmsEndpURL[1]
-					u, err := url.Parse(kmsEndpointURL)
-					if err != nil {
-						return false, fmt.Errorf("Error Parsing kms EndpointURL")
-					}
-					kpAPI.URL = u
-				} else {
-					return false, fmt.Errorf("Error in Kms EndPoint URL ")
-				}
+		rContollerClient, err := meta.(ClientSession).ResourceControllerAPIV2()
+		if err != nil {
+			return false, err
+		}
+		rContollerApi := rContollerClient.ResourceServiceInstanceV2()
+		instanceData, err := rContollerApi.GetInstance(instanceID)
+		if err != nil {
+			return false, err
+		}
+		if ep, ok := instanceData.Extensions["endpoints"].(map[string]interface{})[endpointType].(string); ok {
+			u, err := url.Parse(ep + "/api/v2/")
+			if err != nil {
+				return false, fmt.Errorf("Error parsing kp %s endpoint: %s", endpointType, ep)
 			}
+			kpAPI.URL = u
+		} else {
+			return false, fmt.Errorf("No key protect endpoint for instance found for endpoint type: %s", endpointType)
 		}
 	} else {
 		return false, fmt.Errorf("Invalid or unsupported service Instance")
